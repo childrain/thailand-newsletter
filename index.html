@@ -283,7 +283,9 @@ function generate(){
   var calHTML  =buildCal(rangeStart,rangeEnd,steps,py,pm,issue,wy,wm);
   var ganttHTML=buildGantt(rangeStart,rangeEnd,steps,py,pm,issue,wy,wm);
   var tlHTML   =buildTimeline(steps);
-  var notice   =buildNotice(py,pm,issue,steps,wy,wm);
+  var extraEl=document.getElementById('extraMsg');
+  var extraTxt=extraEl&&extraEl.value?extraEl.value:'';
+  var notice   =buildNotice(py,pm,issue,steps,wy,wm,extraTxt);
 
   document.getElementById('result').innerHTML=
     '<div class="card"><div class="card-title">달력형 발행 일정</div>'+calHTML+legend+'</div>'
@@ -292,7 +294,9 @@ function generate(){
    +'<div class="badge">'+py+'년 '+pm+'월호 · 제'+issue+'호</div>'+tlHTML+'</div>'
    +'<div class="card"><div class="card-title">공지사항</div>'
    +'<div class="notice-box" id="nt">'+esc(notice)+'</div>'
-   +'<div class="row-end"><span class="ok" id="ok">✓ 복사!</span>'
+   +'<div style="margin-top:12px;margin-bottom:6px;font-size:11px;color:var(--muted);letter-spacing:1px;">추가 문구 입력 <span style="font-weight:400;">(공지문 하단에 추가됩니다)</span></div>'
+   +'<div id="extraWrap"></div>'
+   +'<div class="row-end" style="margin-top:10px;"><span class="ok" id="ok">✓ 복사!</span>'
    +'<button class="btn btn-red" onclick="copyNotice()">📋 공지문 복사</button></div></div>'
    +'<div class="card"><div class="card-title">HTML 내보내기</div>'
    +'<div class="export-opts">'
@@ -304,6 +308,19 @@ function generate(){
    +'<button class="btn" style="font-size:14px;padding:10px 32px;" '
    +'onclick="doExport('+py+','+pm+','+issue+')">🗂️ 공유용 HTML 내보내기</button></div>';
 
+  // textarea 직접 생성 (따옴표 충돌 방지)
+  var wrap=document.getElementById('extraWrap');
+  if(wrap){
+    var prev=document.getElementById('extraMsg');
+    var prevVal=prev?prev.value:'';
+    var ta=document.createElement('textarea');
+    ta.id='extraMsg';
+    ta.placeholder='예) ※ 이번 호 특집 기고 모집 중입니다. 많은 참여 부탁드립니다!';
+    ta.value=prevVal;
+    ta.style.cssText='width:100%;height:80px;font-family:sans-serif;font-size:13px;padding:10px;border:1px solid var(--border);background:var(--bg);color:var(--ink);border-radius:2px;resize:vertical;line-height:1.7;';
+    wrap.innerHTML='';
+    wrap.appendChild(ta);
+  }
   window._ex={py:py,pm:pm,issue:issue,steps:steps,wy:wy,wm:wm,
     notice:notice,calHTML:calHTML,ganttHTML:ganttHTML,tlHTML:tlHTML,legend:legend};
 }
@@ -444,14 +461,14 @@ function buildTimeline(steps){
 }
 
 // ── 공지문 빌더 ──
-function buildNotice(py,pm,issue,steps,wy,wm){
+function buildNotice(py,pm,issue,steps,wy,wm,extra){
   var icons=['📄','📝','✍️','🖨️','🔍','📦','📗','✈️'];
   var lines='';
   steps.forEach(function(s,i){
     var dateStr=s.single?fmtDt(s.de):fmtDt(s.ds)+' ~ '+fmtDt(s.de);
     lines+=(icons[i]||'▪')+' '+s.label+'  '+dateStr+'\n';
   });
-  return '📋 ['+py+'년 '+pm+'월호 · 제'+issue+'호 발행 일정 안내]\n\n'
+  var base='📋 ['+py+'년 '+pm+'월호 · 제'+issue+'호 발행 일정 안내]\n\n'
     +'안녕하세요, 태국한인소식지 편집부입니다 🇹🇭🇰🇷\n\n'
     +pm+'월호 발행 일정을 아래와 같이 안내드립니다.\n'
     +'원활한 발행을 위해 각 일정을 꼭 지켜주시길 부탁드립니다 🙏\n\n'
@@ -460,12 +477,15 @@ function buildNotice(py,pm,issue,steps,wy,wm){
     +'──────────────────────\n\n'
     +'기사 투고 및 문의사항은 편집부로 연락 주세요.\n'
     +pm+'월호도 알찬 소식지가 될 수 있도록 많은 참여 부탁드립니다! 😊';
+  return extra&&extra.trim()?base+'\n\n'+extra.trim():base;
 }
 
 function copyNotice(){
   var el=document.getElementById('nt');
   if(!el)return;
-  navigator.clipboard.writeText(el.innerText).then(function(){
+  var extra=document.getElementById('extraMsg');
+  var extraTxt=extra&&extra.value.trim()?'\n\n'+extra.value.trim():'';
+  navigator.clipboard.writeText(el.innerText+extraTxt).then(function(){
     var ok=document.getElementById('ok');ok.classList.add('show');
     setTimeout(function(){ok.classList.remove('show');},2500);
   });
@@ -482,7 +502,10 @@ function doExport(py,pm,issue){
   if(inclCal)    sections+='<div class="card"><div class="card-title">달력형 발행 일정</div>'+ex.calHTML+ex.legend+'</div>';
   if(inclGantt)  sections+='<div class="card"><div class="card-title">간트차트</div>'+ex.ganttHTML+ex.legend+'</div>';
   if(inclTl)     sections+='<div class="card"><div class="card-title">발행 일정표</div><div class="badge">'+py+'년 '+pm+'월호 · 제'+issue+'호</div>'+ex.tlHTML+'</div>';
-  if(inclNotice) sections+='<div class="card"><div class="card-title">공지사항</div><div class="notice-share">'+esc(ex.notice)+'</div></div>';
+  var exportExtra=document.getElementById('extraMsg');
+  var exportExtraTxt=exportExtra&&exportExtra.value.trim()?exportExtra.value.trim():'';
+  var exportNotice=exportExtraTxt?ex.notice+'\n\n'+exportExtraTxt:ex.notice;
+  if(inclNotice) sections+='<div class="card"><div class="card-title">공지사항</div><div class="notice-share">'+esc(exportNotice)+'</div></div>';
   var css=document.querySelector('style').innerHTML;
   var html='<!DOCTYPE html>\n<html lang="ko">\n<head>\n<meta charset="UTF-8">\n'
     +'<meta name="viewport" content="width=device-width,initial-scale=1.0">\n'
