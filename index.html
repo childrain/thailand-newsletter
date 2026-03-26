@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>태국한인소식지 일정 생성기</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500&display=swap');
+:root{--bg:#f7f4ef;--paper:#fffef9;--ink:#1a1208;--accent:#c8392b;--gold:#b8860b;--muted:#7a6e5f;--border:#d4c9b0;--blue:#1a3a6b;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--ink);min-height:100vh;padding:32px 16px;}
+.masthead{text-align:center;margin-bottom:40px;padding-bottom:24px;border-bottom:3px double var(--border);}
+.flag{font-size:28px;margin-bottom:10px;}
+.masthead h1{font-family:'Noto Serif KR',serif;font-size:24px;font-weight:700;color:var(--blue);}
+.masthead .sub{font-size:11px;color:var(--muted);margin-top:6px;letter-spacing:2px;}
+.card{background:var(--paper);border:1px solid var(--border);border-radius:2px;padding:28px;max-width:660px;margin:0 auto 24px;box-shadow:2px 2px 0 var(--border);}
+.card-title{font-family:'Noto Serif KR',serif;font-size:12px;font-weight:600;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.controls{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;}
+.cg{display:flex;flex-direction:column;gap:6px;}
+.cg label{font-size:11px;color:var(--muted);letter-spacing:1px;font-weight:500;}
+select,input[type=number]{font-family:'Noto Sans KR',sans-serif;font-size:15px;padding:8px 12px;border:1px solid var(--border);background:var(--bg);color:var(--ink);border-radius:2px;appearance:none;cursor:pointer;}
+.btn{font-family:'Noto Serif KR',serif;font-size:14px;font-weight:600;padding:9px 24px;background:var(--blue);color:#fff;border:none;border-radius:2px;cursor:pointer;transition:background .2s;}
+.btn:hover{background:#0f2850;}
+.btn-red{background:var(--accent);}
+.btn-red:hover{background:#a02a20;}
+.badge{display:inline-block;background:var(--blue);color:#fff;font-family:'Noto Serif KR',serif;font-size:13px;padding:2px 14px;border-radius:20px;margin-bottom:20px;}
+.tl-item{display:grid;grid-template-columns:80px 28px 1fr;margin-bottom:0;}
+.tl-date{text-align:right;padding:12px 8px 0 0;}
+.tl-date .day{font-family:'Noto Serif KR',serif;font-size:22px;font-weight:700;color:var(--blue);display:block;line-height:1;}
+.tl-date .wd{font-size:11px;color:var(--muted);display:block;margin-top:2px;}
+.tl-line{display:flex;flex-direction:column;align-items:center;}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--blue);border:2px solid var(--paper);outline:2px solid var(--blue);margin-top:16px;flex-shrink:0;}
+.dot.accent{background:var(--accent);outline-color:var(--accent);}
+.dot.gold{background:var(--gold);outline-color:var(--gold);}
+.conn{width:2px;flex:1;background:var(--border);margin-top:2px;}
+.tl-item:last-child .conn{display:none;}
+.tl-body{padding:10px 0 18px 4px;}
+.step-n{font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:2px;}
+.step-l{font-family:'Noto Serif KR',serif;font-size:16px;font-weight:600;color:var(--ink);margin-bottom:3px;}
+.step-l.accent{color:var(--accent);}
+.step-l.gold{color:var(--gold);}
+.step-note{font-size:12px;color:var(--muted);line-height:1.5;}
+.notice-box{background:var(--bg);border:1px solid var(--border);border-left:4px solid var(--blue);padding:20px;font-size:14px;line-height:2;white-space:pre-line;border-radius:0 2px 2px 0;margin-bottom:16px;word-break:keep-all;}
+.row{display:flex;gap:10px;justify-content:flex-end;align-items:center;}
+.ok{font-size:12px;color:var(--accent);opacity:0;transition:opacity .3s;}
+.ok.show{opacity:1;}
+.export-hint{font-size:12px;color:var(--muted);margin-bottom:12px;text-align:center;}
+footer{text-align:center;font-size:11px;color:var(--muted);margin-top:32px;letter-spacing:1px;}
+</style>
+</head>
+<body>
+<div class="masthead">
+  <div class="flag">🇹🇭 🇰🇷</div>
+  <h1>태국한인소식지 발행 일정 생성기</h1>
+  <div class="sub">MONTHLY NEWSLETTER SCHEDULE GENERATOR</div>
+</div>
+
+<div class="card">
+  <div class="card-title">작업 월 선택 <span style="font-size:11px;font-weight:400;letter-spacing:0;color:var(--muted);">※ 작업하는 달 선택 → 다음 달호 자동 생성</span></div>
+  <div class="controls">
+    <div class="cg"><label>작업 연도</label><select id="selY"></select></div>
+    <div class="cg"><label>작업 월</label><select id="selM"></select></div>
+    <div class="cg"><label>호수</label><input type="number" id="issueNo" min="1" max="99" value="9" style="width:78px;"></div>
+    <button class="btn" onclick="generate()">일정 생성</button>
+  </div>
+</div>
+
+<div id="result" style="max-width:660px;margin:0 auto;"></div>
+<footer>매달 1일, 이 페이지를 열어 작업 월을 선택하고 HTML을 내보내세요.</footer>
+
+<script>
+var STEPS=[
+  {key:'deadline', label:'기사 마감',         note:'각 기고자 원고 제출 마감',                day:12, dot:''},
+  {key:'editprep', label:'편집 준비',          note:'글자수 조정 · 단락 제목 지정 (편집책임자)', day:13, dot:''},
+  {key:'design',   label:'1차 편집 시안 완료', note:'편집자 → 편집책임자 시안 전달',            day:20, dot:''},
+  {key:'proof',    label:'교정 완료',          note:'태국한인회 교정 검토 마감',                day:21, dot:''},
+  {key:'print',    label:'인쇄 발주',          note:'인쇄소에 최종 파일 전달',                  day:22, dot:'accent'},
+  {key:'done',     label:'인쇄·제본 완료',     note:'책 수령 및 포장',                          day:29, dot:''},
+  {key:'ship',     label:'태국 발송',          note:'항공 탁송 출발',                           day:30, dot:'gold'}
+];
+var WD=['일','월','화','수','목','금','토'];
+
+function weekday(y,m,d){
+  var dt=new Date(y,m-1,d);
+  var w=dt.getDay();
+  if(w===0) dt.setDate(dt.getDate()+1);
+  else if(w===6) dt.setDate(dt.getDate()+2);
+  return dt;
+}
+function fmt(dt){ return (dt.getMonth()+1)+'월 '+dt.getDate()+'일('+WD[dt.getDay()]+')'; }
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+var selY=document.getElementById('selY');
+var selM=document.getElementById('selM');
+var now=new Date();
+for(var y=2026;y<=2028;y++){
+  var o=document.createElement('option');
+  o.value=y; o.text=y+'년';
+  if(y===now.getFullYear()) o.selected=true;
+  selY.appendChild(o);
+}
+for(var m=1;m<=12;m++){
+  var o=document.createElement('option');
+  o.value=m; o.text=m+'월';
+  if(m===now.getMonth()+1) o.selected=true;
+  selM.appendChild(o);
+}
+
+function generate(){
+  var wy=+selY.value, wm=+selM.value, issue=+document.getElementById('issueNo').value;
+  var pm=wm===12?1:wm+1, py=wm===12?wy+1:wy;
+  var dates=STEPS.map(function(s){ return {key:s.key,label:s.label,note:s.note,dot:s.dot,dt:weekday(wy,wm,s.day)}; });
+
+  var tl='<div class="badge">'+py+'년 '+pm+'월호 · 제'+issue+'호</div><div class="tl">';
+  dates.forEach(function(s,i){
+    var d=s.dt;
+    tl+='<div class="tl-item">'
+      +'<div class="tl-date"><span class="day">'+d.getDate()+'</span><span class="wd">'+WD[d.getDay()]+'요일</span></div>'
+      +'<div class="tl-line"><div class="dot '+s.dot+'"></div><div class="conn"></div></div>'
+      +'<div class="tl-body"><div class="step-n">STEP '+(i+1)+'</div>'
+      +'<div class="step-l '+s.dot+'">'+s.label+'</div>'
+      +'<div class="step-note">'+s.note+'</div></div>'
+      +'</div>';
+  });
+  tl+='</div>';
+
+  var notice=buildNotice(py,pm,issue,dates);
+
+  document.getElementById('result').innerHTML=
+    '<div class="card"><div class="card-title">발행 일정표</div>'+tl+'</div>'
+    +'<div class="card"><div class="card-title">카카오톡 공지문</div>'
+    +'<div class="notice-box" id="nt">'+esc(notice)+'</div>'
+    +'<div class="row"><span class="ok" id="ok">✓ 복사되었습니다!</span>'
+    +'<button class="btn btn-red" onclick="copyNotice()">📋 공지문 복사</button></div></div>'
+    +'<div class="card"><div class="export-hint">아래 버튼을 누르면 일정표 + 공지문이 담긴 독립 HTML 파일이 다운로드됩니다</div>'
+    +'<div style="text-align:center"><button class="btn" style="font-size:15px;padding:11px 36px;" onclick="doExport('+py+','+pm+','+issue+')">🗂️ 공유용 HTML 내보내기</button></div></div>';
+
+  window._ex={py:py,pm:pm,issue:issue,dates:dates};
+}
+
+function buildNotice(py,pm,issue,dates){
+  function d(k){ return fmt(dates.find(function(x){return x.key===k;}).dt); }
+  return '📋 ['+py+'년 '+pm+'월호 · 제'+issue+'호 발행 일정 안내]\n\n'
+    +'안녕하세요, 태국한인소식지 편집부입니다 🇹🇭🇰🇷\n\n'
+    +pm+'월호 발행 일정을 아래와 같이 안내드립니다.\n'
+    +'원활한 발행을 위해 각 일정을 꼭 지켜주시길 부탁드립니다 🙏\n\n'
+    +'──────────────────────\n'
+    +'📝 기사 마감       '+d('deadline')+'\n'
+    +'✍️  편집 준비 완료  '+d('editprep')+'\n'
+    +'🖨️  1차 편집 시안  '+d('design')+'\n'
+    +'🔍 교정 마감       '+d('proof')+'\n'
+    +'📦 인쇄 발주       '+d('print')+'\n'
+    +'📗 인쇄·제본 완료  '+d('done')+'\n'
+    +'✈️  태국 발송       '+d('ship')+'\n'
+    +'──────────────────────\n\n'
+    +'기사 투고 및 문의사항은 편집부로 연락 주세요.\n'
+    +pm+'월호도 알찬 소식지가 될 수 있도록 많은 참여 부탁드립니다! 😊';
+}
+
+function copyNotice(){
+  var el=document.getElementById('nt');
+  if(!el) return;
+  navigator.clipboard.writeText(el.innerText).then(function(){
+    var ok=document.getElementById('ok');
+    ok.classList.add('show');
+    setTimeout(function(){ok.classList.remove('show');},2500);
+  });
+}
+
+function doExport(py,pm,issue){
+  var dates=window._ex.dates;
+  function d(k){ return fmt(dates.find(function(x){return x.key===k;}).dt); }
+
+  var rows='';
+  dates.forEach(function(s,i){
+    var dt=s.dt;
+    rows+='<div class="tl-item">'
+      +'<div class="tl-date"><span class="day">'+dt.getDate()+'</span><span class="wd">'+WD[dt.getDay()]+'요일</span></div>'
+      +'<div class="tl-line"><div class="dot '+s.dot+'"></div><div class="conn"></div></div>'
+      +'<div class="tl-body"><div class="step-n">STEP '+(i+1)+'</div>'
+      +'<div class="step-l '+s.dot+'">'+s.label+'</div>'
+      +'<div class="step-note">'+s.note+'</div></div>'
+      +'</div>';
+  });
+
+  var notice=buildNotice(py,pm,issue,dates);
+
+  var html='<!DOCTYPE html>\n<html lang="ko">\n<head>\n<meta charset="UTF-8">\n'
+    +'<meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
+    +'<title>태국한인소식지 '+py+'년 '+pm+'월호 발행 일정</title>\n'
+    +'<style>\n'
+    +'@import url(\'https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500&display=swap\');\n'
+    +':root{--bg:#f7f4ef;--paper:#fffef9;--ink:#1a1208;--accent:#c8392b;--gold:#b8860b;--muted:#7a6e5f;--border:#d4c9b0;--blue:#1a3a6b;}\n'
+    +'*{box-sizing:border-box;margin:0;padding:0;}\n'
+    +'body{background:var(--bg);font-family:\'Noto Sans KR\',sans-serif;color:var(--ink);min-height:100vh;padding:40px 16px;}\n'
+    +'.wrap{max-width:600px;margin:0 auto;}\n'
+    +'.masthead{text-align:center;margin-bottom:36px;padding-bottom:24px;border-bottom:3px double var(--border);}\n'
+    +'.flag{font-size:26px;margin-bottom:10px;}\n'
+    +'.masthead h1{font-family:\'Noto Serif KR\',serif;font-size:22px;font-weight:700;color:var(--blue);}\n'
+    +'.masthead .sub{font-size:11px;color:var(--muted);margin-top:6px;letter-spacing:2px;}\n'
+    +'.card{background:var(--paper);border:1px solid var(--border);border-radius:2px;padding:28px;margin-bottom:24px;box-shadow:2px 2px 0 var(--border);}\n'
+    +'.card-title{font-family:\'Noto Serif KR\',serif;font-size:12px;font-weight:600;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--border);}\n'
+    +'.badge{display:inline-block;background:var(--blue);color:#fff;font-family:\'Noto Serif KR\',serif;font-size:13px;padding:3px 14px;border-radius:20px;margin-bottom:20px;}\n'
+    +'.tl-item{display:grid;grid-template-columns:76px 28px 1fr;}\n'
+    +'.tl-date{text-align:right;padding:12px 8px 0 0;}\n'
+    +'.tl-date .day{font-family:\'Noto Serif KR\',serif;font-size:22px;font-weight:700;color:var(--blue);display:block;line-height:1;}\n'
+    +'.tl-date .wd{font-size:11px;color:var(--muted);display:block;margin-top:2px;}\n'
+    +'.tl-line{display:flex;flex-direction:column;align-items:center;}\n'
+    +'.dot{width:12px;height:12px;border-radius:50%;background:var(--blue);border:2px solid var(--paper);outline:2px solid var(--blue);margin-top:16px;flex-shrink:0;}\n'
+    +'.dot.accent{background:var(--accent);outline-color:var(--accent);}\n'
+    +'.dot.gold{background:var(--gold);outline-color:var(--gold);}\n'
+    +'.conn{width:2px;flex:1;background:var(--border);margin-top:2px;}\n'
+    +'.tl-item:last-child .conn{display:none;}\n'
+    +'.tl-body{padding:10px 0 18px 4px;}\n'
+    +'.step-n{font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:2px;}\n'
+    +'.step-l{font-family:\'Noto Serif KR\',serif;font-size:16px;font-weight:600;color:var(--ink);margin-bottom:3px;}\n'
+    +'.step-l.accent{color:var(--accent);}\n'
+    +'.step-l.gold{color:var(--gold);}\n'
+    +'.step-note{font-size:12px;color:var(--muted);line-height:1.5;}\n'
+    +'.notice{background:var(--bg);border:1px solid var(--border);border-left:4px solid var(--blue);padding:20px;font-size:14px;line-height:2.1;white-space:pre-line;border-radius:0 2px 2px 0;word-break:keep-all;}\n'
+    +'footer{text-align:center;font-size:11px;color:var(--muted);margin-top:32px;letter-spacing:1px;}\n'
+    +'</style>\n</head>\n<body>\n'
+    +'<div class="wrap">\n'
+    +'<div class="masthead"><div class="flag">🇹🇭 🇰🇷</div>'
+    +'<h1>태국한인소식지</h1>'
+    +'<div class="sub">발행 일정 공지 · '+py+'년 '+pm+'월호 · 제'+issue+'호</div></div>\n'
+    +'<div class="card"><div class="card-title">발행 일정표</div>'
+    +'<div class="badge">'+py+'년 '+pm+'월호 · 제'+issue+'호</div>'
+    +rows+'</div>\n'
+    +'<div class="card"><div class="card-title">카카오톡 공지문</div>'
+    +'<div class="notice">'+esc(notice)+'</div></div>\n'
+    +'<footer>태국한인소식지 편집부 · '+py+'</footer>\n'
+    +'</div>\n</body>\n</html>';
+
+  var blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download='태국한인소식지_'+py+'년'+pm+'월호_발행일정.html';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+window.onload=function(){ generate(); };
+</script>
+</body>
+</html>
