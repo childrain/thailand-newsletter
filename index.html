@@ -131,6 +131,10 @@ footer{text-align:center;font-size:11px;color:var(--muted);margin-top:28px;lette
   <div class="hint">※ 토·일은 자동으로 다음 월요일로 보정됩니다. 단일 이벤트는 시작일=종료일로 설정하세요. 월말을 넘어가는 날짜(예: 30→5월1일)도 자동 처리됩니다.</div>
 </div>
 
+<div class="card" id="extraCard">
+  <div class="card-title">추가 문구 <span style="font-size:11px;font-weight:400;letter-spacing:0;color:var(--muted);">※ 공지사항 하단에 추가됩니다. 없으면 비워두세요.</span></div>
+  <div id="extraWrap"></div>
+</div>
 <div id="result" style="max-width:860px;margin:0 auto;"></div>
 <footer>태국한인소식지 편집부</footer>
 
@@ -294,8 +298,7 @@ function generate(){
    +'<div class="badge">'+py+'년 '+pm+'월호 · 제'+issue+'호</div>'+tlHTML+'</div>'
    +'<div class="card"><div class="card-title">공지사항</div>'
    +'<div class="notice-box" id="nt">'+esc(notice)+'</div>'
-   +'<div style="margin-top:12px;margin-bottom:6px;font-size:11px;color:var(--muted);letter-spacing:1px;">추가 문구 입력 <span style="font-weight:400;">(공지문 하단에 추가됩니다)</span></div>'
-   +'<div id="extraWrap"></div>'
+
    +'<div class="row-end" style="margin-top:10px;"><span class="ok" id="ok">✓ 복사!</span>'
    +'<button class="btn btn-red" onclick="copyNotice()">📋 공지문 복사</button></div></div>'
    +'<div class="card"><div class="card-title">HTML 내보내기</div>'
@@ -308,19 +311,7 @@ function generate(){
    +'<button class="btn" style="font-size:14px;padding:10px 32px;" '
    +'onclick="doExport('+py+','+pm+','+issue+')">🗂️ 공유용 HTML 내보내기</button></div>';
 
-  // textarea 직접 생성 (따옴표 충돌 방지)
-  var wrap=document.getElementById('extraWrap');
-  if(wrap){
-    var prev=document.getElementById('extraMsg');
-    var prevVal=prev?prev.value:'';
-    var ta=document.createElement('textarea');
-    ta.id='extraMsg';
-    ta.placeholder='예) ※ 이번 호 특집 기고 모집 중입니다. 많은 참여 부탁드립니다!';
-    ta.value=prevVal;
-    ta.style.cssText='width:100%;height:80px;font-family:sans-serif;font-size:13px;padding:10px;border:1px solid var(--border);background:var(--bg);color:var(--ink);border-radius:2px;resize:vertical;line-height:1.7;';
-    wrap.innerHTML='';
-    wrap.appendChild(ta);
-  }
+
   window._ex={py:py,pm:pm,issue:issue,steps:steps,wy:wy,wm:wm,
     notice:notice,calHTML:calHTML,ganttHTML:ganttHTML,tlHTML:tlHTML,legend:legend};
 }
@@ -525,7 +516,16 @@ function doExport(py,pm,issue){
   a.click();URL.revokeObjectURL(url);
 }
 
-window.onload=function(){renderStepTable();updateIssueDefault();generate();};
+window.onload=function(){
+  renderStepTable();
+  updateIssueDefault();
+  // 추가 문구 textarea 생성
+  var ta=document.createElement('textarea');
+  ta.id='extraMsg';
+  ta.placeholder='예) ※ 이번 호 특집 기고 모집 중입니다. 많은 참여 부탁드립니다!';
+  ta.style.cssText='width:100%;height:80px;font-family:sans-serif;font-size:13px;padding:10px;border:1px solid var(--border);background:var(--bg);color:var(--ink);border-radius:2px;resize:vertical;line-height:1.7;';
+  document.getElementById('extraWrap').appendChild(ta);
+};
 </script>
 </body>
 </html>
